@@ -2,75 +2,61 @@
 
 ## Project
 
-**flashcards** — a small FastAPI + HTMX + SQLite web app for browsing AI-native definitions (CLI, MCP, token, RAG, agent, etc.). One Python process serves both the API and server-rendered HTML; HTMX handles interactivity without a JS build step. SQLite ships in the repo for zero infra.
+**flashcards** — a static single-page web app for browsing AI-native definitions (CLI, MCP, token, RAG, agent, etc.). No backend, no build step. Four files at the repo root: `index.html`, `app.js`, `style.css`, `cards.json`. Deployed to both Netlify and GitHub Pages from the same `main` branch.
 
-Read this file before editing — it documents non-obvious conventions.
+Read this before editing.
 
 ## Stack
 
-- **Python ≥3.11** — runs on 3.11/3.12/3.13
-- **FastAPI** (async-capable, sync handlers used throughout — the DB is local SQLite)
-- **Jinja2** — server-rendered templates with HTMX partials
-- **HTMX 2.x** via CDN — no JS toolchain
-- **Tailwind Play CDN** — no CSS build step
-- **stdlib `sqlite3`** — no SQLAlchemy. `isolation_level=None`, explicit BEGIN/COMMIT, WAL journal, FTS5 for search
-- **Pydantic v2** — request/response models
-- **pydantic-settings** — env-driven config
-- **uv** for env + lock; **hatchling** as build backend
-- **ruff + mypy + pytest** — same shape as the workspace's other Python projects
+- Plain HTML + vanilla JS (ES modules) — no bundler, no framework.
+- **Tailwind CSS via the Play CDN** — `<script src="https://cdn.tailwindcss.com">`. Tweaked theme colours (`ink`, `card`, `accent`, `soft`) defined inline in `index.html`.
+- `cards.json` is the single source of truth for content. The JS loads it via `fetch("./cards.json")` at startup.
+- No dependencies, no `package.json`, no `npm install`.
 
 ## Conventions
 
-**Database access:**
-- Every DB connection goes through `db.connect()`. It sets `foreign_keys=ON`, `journal_mode=WAL`, `busy_timeout=5000`. Don't call `sqlite3.connect()` directly.
-- The schema lives in `src/flashcards/schema.sql`. The FTS5 virtual table `cards_fts` is kept in sync by triggers — don't write to `cards_fts` directly.
-- Tests get a fresh DB per test via the `db` fixture in `tests/conftest.py`. No shared state, no mocking.
-
-**HTMX content negotiation:**
-- `GET /api/cards` returns JSON by default, an HTML grid partial when `?format=html` is set or when `HX-Request: true` is present. The function returns one shape; FastAPI's `Response` is the right boundary.
-
-**Admin auth:**
-- `POST /api/cards` is gated by a `X-Admin-Token` header compared against `settings.admin_token`. If `admin_token` is unset, the endpoint always returns 401 — opt-in, never accidentally open.
-
-**Seed data:**
-- `assets/seed_cards.json` is the canonical source for the starter deck. `seed.run()` is idempotent — runs on startup if `FLASHCARDS_SEED_ON_START=true` and the DB has zero cards.
-
-**Comments:**
-- Default to no comments. Only add a `# why:` line when the reasoning isn't obvious from the names.
-
-## Architecture
-
+**Data shape (`cards.json`):**
+```json
+{
+  "decks": [{ "slug": "ai-native", "name": "AI-Native Vocabulary", "description": "..." }],
+  "cards": [
+    {
+      "deck": "ai-native",
+      "term": "RAG",
+      "definition": "Retrieval-Augmented Generation. …",
+      "tags": ["patterns"],
+      "source_url": "https://…"  // optional
+    }
+  ]
+}
 ```
-src/flashcards/
-├── __main__.py     # uvicorn launcher
-├── app.py          # FastAPI factory + route registration + lifespan (schema apply + seed)
-├── config.py       # pydantic-settings Settings(env_prefix="FLASHCARDS_")
-├── db.py           # sqlite3 connection factory, schema-apply helper
-├── schema.sql      # decks, cards, tags, card_tags, cards_fts + triggers
-├── models.py       # Pydantic models: Deck, Card, CardCreate, Tag
-├── repo.py         # CRUD over sqlite — pure functions, take a Connection
-├── api.py          # APIRouter for /api/*
-├── views.py        # APIRouter for HTML routes
-├── seed.py         # idempotent loader for assets/seed_cards.json
-├── templates/      # base, index, deck, _card_grid, _card, admin
-└── static/         # style.css, flip.js
-```
+- `tags` is freeform but kept lowercase by convention.
+- `source_url` is optional; the flip back shows a "source ↗" link only when present.
 
-**Layer rules:**
-- `models` has zero project deps.
-- `db` imports nothing project (only stdlib + `config`).
-- `repo` imports `db` + `models`.
-- `api`, `views` import `repo` + `models` + `config`.
-- `seed` imports `repo`.
-- `app` is the composition root.
+**Where things live:**
+- All markup is in `index.html`. Card markup lives in a `<template id="card-tmpl">` at the bottom.
+- All behaviour is in `app.js`. State is a single object (`{cards, deckBySlug, query, activeTag}`); render functions read from it.
+- All custom styling is in `style.css`. The flip animation uses `transform: rotateY(180deg)` on `.flip-card.is-flipped .flip-inner`, with `backface-visibility: hidden` on each face.
 
-## Run / test commands
+**Don't:**
+- Don't reach for a JS framework. 25 cards + search + flip doesn't need it.
+- Don't add a build step (`vite`, `esbuild`, npm scripts). The Netlify/Pages flow assumes "publish the repo root as-is."
+- Don't make `cards.json` huge. If it grows past a few hundred entries, paginate or split per deck — but the current size loads in <50ms.
+
+## Deploy
+
+Two parallel deploys from the same `main` branch:
+
+- **Netlify** picks up `netlify.toml`, publishes the repo root.
+- **GitHub Pages** runs `.github/workflows/pages.yml` on every push: stages the four runtime files into `_site/`, uploads as a Pages artifact, deploys via `actions/deploy-pages@v4`.
+
+The workflow doesn't lint, build, or test — there's nothing to lint or build.
+
+## Local dev
 
 ```bash
-uv sync
-uv run python scripts/init_db.py
-uv run python -m flashcards
-uv run pytest -ra
-uv run ruff check . && uv run ruff format --check .
-uv run mypy src
+python -m http.server 8000
+# http://localhost:8000
 ```
+
+The fetch for `./cards.json` needs an HTTP origin; opening `index.html` directly via `file://` will 404 on the JSON.

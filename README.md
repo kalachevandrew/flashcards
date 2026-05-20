@@ -1,96 +1,70 @@
 # flashcards
 
-AI-native flashcards. A tiny web app that helps you (and your team) learn the vocabulary of working with LLMs — **CLI**, **MCP**, **token**, **context window**, **RAG**, **agent**, **embedding**, **fine-tuning**, and ~20 more. Click a card to flip it; search to filter live.
+AI-native flashcards. A tiny static site that helps you learn the vocabulary of working with LLMs — **CLI**, **MCP**, **token**, **context window**, **RAG**, **agent**, **embedding**, **fine-tuning**, and ~20 more. Click a card to flip it; search to filter live.
 
-**Stack:** FastAPI + HTMX + SQLite. One Python process. No build step. No JavaScript framework. Ships with a seed deck so it's useful the moment you start it.
+**Zero build step.** Plain HTML + vanilla JS + JSON data. Tailwind via CDN. The whole site is four files at the repo root.
 
-## Quick start
+## Layout
 
-```bash
-# clone, then:
-uv sync
-uv run python scripts/init_db.py   # creates ./data/flashcards.db + seeds ~25 AI terms
-uv run python -m flashcards        # serves http://localhost:8000
+```
+flashcards/
+├── index.html              # markup + Tailwind config
+├── app.js                  # fetch cards.json, render grid, search, flip
+├── style.css               # flip-card animation + chip styles
+├── cards.json              # the data (decks + cards array)
+├── netlify.toml            # Netlify deploy config
+├── .github/workflows/
+│   └── pages.yml           # GitHub Pages deploy on every push to main
+├── LICENSE                 # MIT
+└── README.md
 ```
 
-Open <http://localhost:8000>, pick a deck, click a card. The search box uses HTMX to filter the grid live.
+## Run locally
 
-## Tests
-
-```bash
-uv run pytest -ra            # unit + API + view tests
-uv run ruff check .          # lint
-uv run ruff format --check . # format check
-uv run mypy src              # type-check
-```
-
-## Docker
+Any static server works. Easiest:
 
 ```bash
-docker compose up --build
+python -m http.server 8000
+# then open http://localhost:8000
 ```
 
-The SQLite file persists at `./data/flashcards.db` via a mounted volume; the container restarts cleanly without losing cards.
-
-## Adding cards
-
-Two ways:
-
-**CLI** (no auth, local only):
+Or with Node:
 
 ```bash
-uv run python scripts/add_card.py \
-  --deck ai-native \
-  --term "Prompt injection" \
-  --definition "An attack where untrusted input rewrites a model's instructions." \
-  --tag patterns --tag safety
+npx serve .
 ```
 
-**HTTP** (requires the `X-Admin-Token` header, matched against the `ADMIN_TOKEN` env var):
+Don't just double-click `index.html` — the `fetch("./cards.json")` call needs an HTTP origin, not `file://`.
 
-```bash
-export ADMIN_TOKEN=changeme
-curl -X POST http://localhost:8000/api/cards \
-  -H "X-Admin-Token: $ADMIN_TOKEN" \
-  -H "content-type: application/json" \
-  -d '{
-        "term": "Prompt injection",
-        "definition": "An attack where untrusted input rewrites a model'\''s instructions.",
-        "deck": "ai-native",
-        "tags": ["patterns", "safety"]
-      }'
-```
+## Add a card
 
-Without the token, the endpoint returns `401`.
+Edit `cards.json`. The file has two top-level keys:
 
-## Configuration
+- `decks` — array of `{slug, name, description}`. Used for the deck label on each card.
+- `cards` — array of `{deck, term, definition, tags, source_url?}`.
 
-All settings read from environment variables (prefix `FLASHCARDS_`):
-
-| Variable                 | Default                      | Meaning                                    |
-| ------------------------ | ---------------------------- | ------------------------------------------ |
-| `FLASHCARDS_DB_PATH`     | `./data/flashcards.db`       | SQLite file path                           |
-| `FLASHCARDS_ADMIN_TOKEN` | *(unset → admin disabled)*   | Token required on `POST /api/cards`        |
-| `FLASHCARDS_HOST`        | `0.0.0.0`                    | uvicorn bind host                          |
-| `FLASHCARDS_PORT`        | `8000`                       | uvicorn bind port                          |
-| `FLASHCARDS_SEED_ON_START` | `true`                     | Seed the DB on startup if it's empty       |
+Commit and push; Netlify and GitHub Pages will rebuild within seconds.
 
 ## Deploy
 
-- **Fly.io:** `fly launch --no-deploy && fly deploy` — the included Dockerfile is fly-compatible.
-- **Railway / Render:** point at the repo; both auto-detect the Dockerfile.
+### Netlify
 
-## API
+1. Connect this repo at <https://app.netlify.com/>.
+2. Build command: *(empty)*. Publish directory: `.`. The included `netlify.toml` sets this.
+3. Done.
 
-| Method | Path                  | Description                                      |
-| -----: | --------------------- | ------------------------------------------------ |
-|    GET | `/`                   | Deck list + global search                        |
-|    GET | `/decks/{slug}`       | Card grid for one deck                           |
-|    GET | `/api/decks`          | JSON list of decks                               |
-|    GET | `/api/cards`          | JSON list; `?q=`, `?tag=`, `?deck=`, `?format=html` |
-|    GET | `/api/cards/{id}`     | JSON single card                                 |
-|   POST | `/api/cards`          | Create card (requires `X-Admin-Token`)           |
-|    GET | `/healthz`            | Health check                                     |
+### GitHub Pages
+
+The `.github/workflows/pages.yml` workflow publishes on every push to `main`. One-time enable:
+
+1. **Settings → Pages → Source → GitHub Actions**.
+2. Push any commit; the workflow stages `index.html`, `app.js`, `style.css`, and `cards.json` into a `_site/` directory and deploys it.
+
+The live URL appears at `https://kalachevandrew.github.io/flashcards/`.
+
+## Why no backend?
+
+Earlier versions ran on FastAPI + SQLite. The whole API surface is doing exactly two things: serving the same 25 cards on every request, and accepting an admin POST gated by a header. Neither needs a server. Editing JSON + git push is a tighter loop than running a database. If real multi-user features (spaced repetition, accounts) ever come up, that's the moment to bring back a backend — not before.
 
 ## License
 
