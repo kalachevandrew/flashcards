@@ -1,6 +1,6 @@
 # flashcards
 
-AI-native flashcards. A tiny static site that helps you learn the vocabulary of working with LLMs — **CLI**, **MCP**, **token**, **context window**, **RAG**, **agent**, **embedding**, **fine-tuning**, and ~20 more. Click a card to flip it; search to filter live.
+AI words explained simply. A tiny static site that turns the vocabulary of working with AI — **CLI**, **MCP**, **token**, **context window**, **RAG**, **agent**, **embedding**, **fine-tuning**, **transformer**, **MoE**, **diffusion**, and 30+ more — into one-sentence explanations a 5-year-old could follow. Click a card to flip it; search to filter live.
 
 **Zero build step.** Plain HTML + vanilla JS + JSON data. Tailwind via CDN. The whole site is four files at the repo root.
 

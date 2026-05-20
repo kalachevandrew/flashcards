@@ -9,7 +9,13 @@ Read this before editing.
 ## Stack
 
 - Plain HTML + vanilla JS (ES modules) — no bundler, no framework.
-- **Tailwind CSS via the Play CDN** — `<script src="https://cdn.tailwindcss.com">`. Tweaked theme colours (`ink`, `card`, `accent`, `soft`) defined inline in `index.html`.
+- **Tailwind CSS via the Play CDN** — `<script src="https://cdn.tailwindcss.com">`. Light theme. Custom palette defined inline in `index.html`:
+  - `page` `#fafaf9` (stone-50 background)
+  - `card` `#ffffff` (card face)
+  - `ink` `#0f172a` (slate-900 primary text)
+  - `muted` `#64748b` (slate-500 secondary text)
+  - `hairline` `#e2e8f0` (slate-200 borders)
+  - `accent` `#4f46e5` (indigo-600) / `accent-soft` `#eef2ff` (indigo-50, flip-back face)
 - `cards.json` is the single source of truth for content. The JS loads it via `fetch("./cards.json")` at startup.
 - No dependencies, no `package.json`, no `npm install`.
 
