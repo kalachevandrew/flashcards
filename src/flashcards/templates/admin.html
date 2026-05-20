@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Add card — flashcards{% endblock %}
+
+{% block content %}
+<section class="mb-6">
+    <h1 class="text-3xl font-semibold tracking-tight mb-2">Add a card</h1>
+    <p class="text-slate-400">
+        Requires an <code class="text-accent">X-Admin-Token</code> header matching the
+        <code class="text-accent">FLASHCARDS_ADMIN_TOKEN</code> env var. This form posts to
+        <code class="text-accent">POST /api/cards</code>.
+    </p>
+</section>
+
+{% if not admin_enabled %}
+<div class="rounded-md border border-amber-700 bg-amber-950/40 p-4 mb-6 text-sm text-amber-200">
+    Admin endpoint disabled — set <code>FLASHCARDS_ADMIN_TOKEN</code> before adding cards.
+</div>
+{% endif %}
+
+<form id="add-card-form" class="space-y-4">
+    <div>
+        <label class="block text-xs uppercase tracking-wide text-slate-500 mb-1">Admin token</label>
+        <input type="password" id="token" required
+               class="w-full bg-soft border border-slate-700 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-accent">
+    </div>
+
+    <div>
+        <label class="block text-xs uppercase tracking-wide text-slate-500 mb-1">Deck</label>
+        <input type="text" id="deck" required list="decks-list" placeholder="ai-native"
+               class="w-full bg-soft border border-slate-700 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-accent">
+        <datalist id="decks-list">
+            {% for d in decks %}<option value="{{ d.slug }}">{{ d.name }}</option>{% endfor %}
+        </datalist>
+    </div>
+
+    <div>
+        <label class="block text-xs uppercase tracking-wide text-slate-500 mb-1">Term</label>
+        <input type="text" id="term" required maxlength="200"
+               class="w-full bg-soft border border-slate-700 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-accent">
+    </div>
+
+    <div>
+        <label class="block text-xs uppercase tracking-wide text-slate-500 mb-1">Definition</label>
+        <textarea id="definition" required rows="4" maxlength="4000"
+                  class="w-full bg-soft border border-slate-700 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-accent"></textarea>
+    </div>
+
+    <div>
+        <label class="block text-xs uppercase tracking-wide text-slate-500 mb-1">Tags (comma-separated)</label>
+        <input type="text" id="tags" placeholder="patterns, safety"
+               class="w-full bg-soft border border-slate-700 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-accent">
+    </div>
+
+    <div>
+        <label class="block text-xs uppercase tracking-wide text-slate-500 mb-1">Source URL (optional)</label>
+        <input type="url" id="source_url" placeholder="https://…"
+               class="w-full bg-soft border border-slate-700 rounded-md px-3 py-2 text-slate-100 focus:outline-none focus:border-accent">
+    </div>
+
+    <button type="submit"
+            class="px-4 py-2 rounded-md bg-accent text-white font-medium hover:bg-violet-500">
+        Add card
+    </button>
+
+    <div id="form-status" class="text-sm"></div>
+</form>
+
+<script>
+document.getElementById('add-card-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const status = document.getElementById('form-status');
+    status.textContent = 'sending…';
+    status.className = 'text-sm text-slate-400';
+
+    const token = document.getElementById('token').value;
+    const body = {
+        term: document.getElementById('term').value,
+        definition: document.getElementById('definition').value,
+        deck: document.getElementById('deck').value,
+        source_url: document.getElementById('source_url').value || null,
+        tags: document.getElementById('tags').value
+            .split(',').map(t => t.trim()).filter(Boolean),
+    };
+
+    try {
+        const r = await fetch('/api/cards', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'X-Admin-Token': token },
+            body: JSON.stringify(body),
+        });
+        if (r.ok) {
+            const card = await r.json();
+            status.textContent = '✓ added card #' + card.id;
+            status.className = 'text-sm text-emerald-400';
+            ['term', 'definition', 'tags', 'source_url'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+        } else {
+            const err = await r.json().catch(() => ({ detail: r.statusText }));
+            status.textContent = '✘ ' + (err.detail || 'error');
+            status.className = 'text-sm text-rose-400';
+        }
+    } catch (err) {
+        status.textContent = '✘ ' + err.message;
+        status.className = 'text-sm text-rose-400';
+    }
+});
+</script>
+{% endblock %}

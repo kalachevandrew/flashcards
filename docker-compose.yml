@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      FLASHCARDS_DB_PATH: /data/flashcards.db
+      FLASHCARDS_HOST: 0.0.0.0
+      FLASHCARDS_PORT: "8000"
+      FLASHCARDS_SEED_ON_START: "true"
+      # FLASHCARDS_ADMIN_TOKEN: changeme   # uncomment to enable POST /api/cards
+    restart: unless-stopped

@@ -1,0 +1,168 @@
+{
+  "decks": [
+    {
+      "slug": "ai-native",
+      "name": "AI-Native Vocabulary",
+      "description": "Core vocabulary for building with LLMs: interfaces, protocols, models, training, inference, and patterns."
+    }
+  ],
+  "cards": [
+    {
+      "deck": "ai-native",
+      "term": "CLI",
+      "definition": "Command-line interface. A text-driven entry point to a program, invoked from a shell. In AI tooling, CLIs (e.g., Claude Code, the OpenAI CLI) are increasingly first-class because they compose with the rest of a developer's environment — scripts, pipelines, editors — better than chat UIs.",
+      "tags": ["interfaces"],
+      "source_url": "https://en.wikipedia.org/wiki/Command-line_interface"
+    },
+    {
+      "deck": "ai-native",
+      "term": "MCP",
+      "definition": "Model Context Protocol — an open standard from Anthropic for connecting LLM clients to external tools and data sources. A server exposes resources, prompts, and tools; a client (e.g., Claude Desktop) discovers and invokes them over a JSON-RPC transport.",
+      "tags": ["protocols", "interfaces"],
+      "source_url": "https://modelcontextprotocol.io/"
+    },
+    {
+      "deck": "ai-native",
+      "term": "LLM",
+      "definition": "Large Language Model. A neural network — typically a transformer with billions of parameters — trained to predict the next token over enormous text corpora. The resulting model can be steered with prompts to translate, summarize, write code, reason, and call tools.",
+      "tags": ["models"],
+      "source_url": "https://en.wikipedia.org/wiki/Large_language_model"
+    },
+    {
+      "deck": "ai-native",
+      "term": "Token",
+      "definition": "The atomic unit an LLM reads and emits. Typically a sub-word chunk produced by a byte-pair-encoding tokenizer — common English words are usually one token, rarer words split into two or three. Pricing, latency, and context-window limits are all denominated in tokens, not characters.",
+      "tags": ["models", "inference"],
+      "source_url": "https://platform.openai.com/tokenizer"
+    },
+    {
+      "deck": "ai-native",
+      "term": "Context window",
+      "definition": "The maximum number of tokens a model can attend to in a single call — its system prompt, user prompt, prior turns, retrieved documents, tool outputs, and its own response all count against the same budget. Exceeding it forces truncation, summarization, or compaction.",
+      "tags": ["inference", "models"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Embedding",
+      "definition": "A fixed-length vector representation of a piece of text (or image, audio, code) such that semantically similar inputs land close together in vector space. The numerical handle that makes search-by-meaning, clustering, and recommendation tractable for unstructured data.",
+      "tags": ["models", "patterns"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Vector database",
+      "definition": "A database optimized for nearest-neighbour search over embedding vectors. Examples: pgvector, Pinecone, Qdrant, Chroma, Weaviate. The retrieval backbone of most RAG systems.",
+      "tags": ["patterns", "interfaces"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "RAG",
+      "definition": "Retrieval-Augmented Generation. A pattern where, before the model answers, you fetch relevant passages from an external knowledge store (usually via vector search) and inject them into the prompt as grounding. Cheaper and fresher than fine-tuning for most knowledge-injection tasks.",
+      "tags": ["patterns"],
+      "source_url": "https://arxiv.org/abs/2005.11401"
+    },
+    {
+      "deck": "ai-native",
+      "term": "Agent",
+      "definition": "An LLM-driven program that runs in a loop — reasoning, choosing a tool, observing the result, and deciding what to do next — until a goal is reached. The key difference from a chatbot: agents take actions in the world (read files, call APIs, run code), not just produce text.",
+      "tags": ["patterns"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Tool use",
+      "definition": "Also called function calling. The model emits a structured request (name + JSON arguments) to invoke a developer-defined function; the runtime executes it and feeds the result back into the next turn. The mechanism that lets an LLM read your database, call an API, or run a shell command.",
+      "tags": ["patterns", "interfaces"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Fine-tuning",
+      "definition": "Continuing the training of a pre-trained model on a smaller, task-specific dataset so its weights bias toward a desired behaviour or style. More expensive than prompting; usually only worthwhile when prompt engineering and RAG cannot reach the target quality.",
+      "tags": ["training"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Prompt",
+      "definition": "The full input string given to a model in a single call. Conventionally split into a system prompt (persistent instructions, persona, output format) and one or more user/assistant turns. Often programmatically assembled rather than hand-written.",
+      "tags": ["patterns", "inference"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "System prompt",
+      "definition": "The privileged top-of-stack instructions a developer sends with every request — defining the model's role, tone, guardrails, and output schema. The model treats the system prompt with higher authority than later user turns.",
+      "tags": ["patterns"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Few-shot",
+      "definition": "Including a small number of input/output examples directly in the prompt to demonstrate the desired pattern, without changing model weights. Cheap, fast, and often surprisingly effective for classification and structured-extraction tasks.",
+      "tags": ["patterns"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Chain-of-thought",
+      "definition": "A prompting technique where the model is encouraged (or required) to write its intermediate reasoning step-by-step before producing the final answer. Improves accuracy on math, logic, and multi-step problems at the cost of more output tokens.",
+      "tags": ["patterns"],
+      "source_url": "https://arxiv.org/abs/2201.11903"
+    },
+    {
+      "deck": "ai-native",
+      "term": "Hallucination",
+      "definition": "A model output that is fluent and plausible but factually wrong — invented citations, non-existent APIs, fabricated quotes. Mitigated (not eliminated) by grounding in retrieved sources, asking for citations, and verifying claims downstream.",
+      "tags": ["patterns", "safety"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Temperature",
+      "definition": "A sampling hyperparameter that scales the model's output logits before softmax. 0 produces near-deterministic, highest-probability tokens; higher values flatten the distribution and increase variety. Use 0 for extraction and code, 0.7–1.0 for creative writing.",
+      "tags": ["inference"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Top-p",
+      "definition": "Nucleus sampling. Restrict the next-token candidate set to the smallest group whose cumulative probability exceeds p (e.g., 0.9), then sample within it. Adapts the candidate set to the model's certainty — confident steps stay narrow, uncertain ones broaden.",
+      "tags": ["inference"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Top-k",
+      "definition": "Restrict next-token sampling to the k most probable tokens regardless of their cumulative probability. Simpler than top-p, but the optimal k varies by context — top-p has largely replaced it in modern APIs.",
+      "tags": ["inference"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "RLHF",
+      "definition": "Reinforcement Learning from Human Feedback. The post-training stage where human raters compare model outputs, a reward model is fit to those preferences, and the LLM is then optimized against that reward signal. The step that turns a base model into a helpful assistant.",
+      "tags": ["training"],
+      "source_url": "https://arxiv.org/abs/2203.02155"
+    },
+    {
+      "deck": "ai-native",
+      "term": "Quantization",
+      "definition": "Compressing model weights from 16- or 32-bit floats down to 8-, 4-, or even 2-bit integers. Cuts memory footprint and inference cost substantially, with modest quality loss when done well (GPTQ, AWQ, GGUF). The key technique for running large models on consumer hardware.",
+      "tags": ["inference"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Inference",
+      "definition": "The act of running a forward pass through a trained model to produce output — as opposed to training, which updates its weights. \"Inference cost\" usually means the cents-per-1M-tokens you pay an API, or the GPU-seconds you burn running locally.",
+      "tags": ["inference"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Latency",
+      "definition": "The wall-clock time from sending a request to getting a response. For LLMs, split into time-to-first-token (TTFT, dominated by prompt processing) and tokens-per-second (steady-state generation rate). TTFT matters most for chat UX.",
+      "tags": ["inference"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Throughput",
+      "definition": "Tokens (or requests) processed per second across all concurrent users. Distinct from latency: a server can be high-throughput and high-latency at once when it batches requests aggressively. The metric that determines your unit economics.",
+      "tags": ["inference"]
+    },
+    {
+      "deck": "ai-native",
+      "term": "Guardrails",
+      "definition": "Pre- and post-generation checks that constrain what a model is allowed to read or say — input filters, output validators, schema enforcement, content classifiers, jailbreak detectors. The safety-critical glue around the model itself, not a property of the model.",
+      "tags": ["patterns", "safety"]
+    }
+  ]
+}

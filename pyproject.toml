@@ -1,0 +1,136 @@
+[build-system]
+requires = ["hatchling>=1.29.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "flashcards"
+version = "0.1.0"
+description = "AI-native flashcards — FastAPI + HTMX + SQLite web app"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Andrei Kalachev", email = "kalachev@manychat.com" }]
+keywords = ["flashcards", "ai", "fastapi", "htmx", "sqlite", "education"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education",
+]
+
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "jinja2>=3.1.4",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "python-multipart>=0.0.12",
+    "typer>=0.13.0",
+]
+
+[project.scripts]
+flashcards = "flashcards.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/akalachev/flashcards"
+Source = "https://github.com/akalachev/flashcards"
+Issues = "https://github.com/akalachev/flashcards/issues"
+
+# ─── uv ─────────────────────────────────────────────────────────────────
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.3.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "ruff>=0.7.0",
+    "mypy>=1.13.0",
+]
+
+# ─── hatchling: package layout + asset packaging ────────────────────────
+[tool.hatch.build.targets.wheel]
+packages = ["src/flashcards"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"assets/seed_cards.json" = "src/flashcards/_data/seed_cards.json"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/flashcards",
+    "assets",
+    "tests",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
+
+# ─── ruff: lint + format ────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "UP", "SIM", "RET", "PTH", "TCH", "ARG", "C4", "PIE",
+]
+ignore = [
+    "E501",   # long lines (Jinja templates and SQL get wide)
+    "B008",   # FastAPI uses Depends() as a default
+    "TC001",  # don't insist on TYPE_CHECKING-guarded imports (style preference)
+    "TC002",
+    "TC003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ARG", "PTH"]
+"scripts/**/*.py" = ["PTH"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ─── mypy ───────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+files = ["src/flashcards"]
+strict = false
+warn_return_any = true
+warn_unused_ignores = true
+no_implicit_optional = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+# ─── pytest ─────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+
+[tool.coverage.run]
+source = ["src/flashcards"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
