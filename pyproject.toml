@@ -41,9 +41,9 @@ dependencies = [
 flashcards = "flashcards.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/akalachev/flashcards"
-Source = "https://github.com/akalachev/flashcards"
-Issues = "https://github.com/akalachev/flashcards/issues"
+Homepage = "https://github.com/kalachevandrew/flashcards"
+Source = "https://github.com/kalachevandrew/flashcards"
+Issues = "https://github.com/kalachevandrew/flashcards/issues"
 
 # ─── uv ─────────────────────────────────────────────────────────────────
 [tool.uv]
